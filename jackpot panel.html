@@ -1,0 +1,1028 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <meta name="theme-color" content="#0a0a0a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Jackpot Panel">
+    <link rel="manifest" href="data:application/json,{}">
+    <link rel="icon" href="https://i.postimg.cc/26Jv49ND/IMG-3138.jpg">
+    <link rel="apple-touch-icon" href="https://i.postimg.cc/26Jv49ND/IMG-3138.jpg">
+    <title>Jackpot Panel | Control Center</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;900&family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <style>
+        /* ═══════════════ CSS VARIABLES – ธีมดำแดง Default ═══════════════ */
+        :root {
+            --accent:       #FF2244;
+            --accent-dim:   #991122;
+            --accent-glow:  rgba(255,34,68,0.35);
+            --accent-ultra: rgba(255,34,68,0.08);
+            --bg-base:      #080810;
+            --bg-panel:     #0D0D18;
+            --bg-card:      #111120;
+            --bg-sidebar:   #0A0A15;
+            --border:       rgba(255,34,68,0.25);
+            --border-bright:rgba(255,34,68,0.6);
+            --text-primary: #F0F0FF;
+            --text-dim:     #888899;
+            --text-muted:   #444458;
+            --grid-color:   rgba(255,34,68,0.06);
+            --anim-speed:   1;
+            --opacity:      1;
+            --font-scale:   1;
+            --sidebar-w:    220px;
+        }
+        [data-theme="cyan"] {
+            --accent: #00FFCC; --accent-dim: #007755; --accent-glow: rgba(0,255,204,0.3);
+            --accent-ultra: rgba(0,255,204,0.07); --border: rgba(0,255,204,0.22);
+            --border-bright: rgba(0,255,204,0.55); --grid-color: rgba(0,255,204,0.05);
+        }
+        [data-theme="purple"] {
+            --accent: #AA44FF; --accent-dim: #6622AA; --accent-glow: rgba(170,68,255,0.32);
+            --accent-ultra: rgba(170,68,255,0.07); --border: rgba(170,68,255,0.22);
+            --border-bright: rgba(170,68,255,0.55); --grid-color: rgba(170,68,255,0.05);
+        }
+        [data-theme="green"] {
+            --accent: #00FF88; --accent-dim: #006633; --accent-glow: rgba(0,255,136,0.3);
+            --accent-ultra: rgba(0,255,136,0.07); --border: rgba(0,255,136,0.22);
+            --border-bright: rgba(0,255,136,0.55); --grid-color: rgba(0,255,136,0.05);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html { height: 100%; }
+        body {
+            min-height: 100vh;
+            background: var(--bg-base);
+            font-family: 'Rajdhani', sans-serif;
+            font-size: calc(15px * var(--font-scale));
+            color: var(--text-primary);
+            overflow: hidden;
+            opacity: var(--opacity);
+            background-image:
+                linear-gradient(var(--grid-color) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px),
+                radial-gradient(ellipse 80% 60% at 50% 50%, rgba(255,20,40,0.04) 0%, transparent 70%);
+            background-size: 40px 40px, 40px 40px, 100% 100%;
+        }
+        body::before {
+            content: '';
+            position: fixed; inset: 0; pointer-events: none; z-index: 9999;
+            background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px);
+        }
+
+        /* Activation overlay */
+        #overlay {
+            position: fixed; inset: 0; z-index: 1000;
+            display: flex; align-items: center; justify-content: center;
+            background: radial-gradient(ellipse at center, rgba(20,0,8,0.97) 0%, rgba(5,5,12,0.99) 100%);
+            backdrop-filter: blur(4px);
+        }
+        .mac-window {
+            width: 420px;
+            background: linear-gradient(160deg, #1A1A2E 0%, #0F0F1A 100%);
+            border-radius: 12px;
+            border: 1px solid var(--border-bright);
+            box-shadow: 0 0 0 1px rgba(255,255,255,0.04), 0 30px 80px rgba(0,0,0,0.8), 0 0 40px var(--accent-glow), inset 0 1px 0 rgba(255,255,255,0.06);
+            overflow: hidden;
+            animation: windowIn calc(0.5s * var(--anim-speed)) cubic-bezier(0.175,0.885,0.32,1.275);
+        }
+        @keyframes windowIn { from{opacity:0;transform:scale(0.88) translateY(20px);} to{opacity:1;transform:scale(1) translateY(0);} }
+        .mac-titlebar {
+            display: flex; align-items: center; gap: 8px;
+            padding: 14px 16px;
+            background: linear-gradient(90deg, rgba(255,34,68,0.08) 0%, transparent 100%);
+            border-bottom: 1px solid var(--border);
+            cursor: default; user-select: none;
+        }
+        .mac-btn { width: 13px; height: 13px; border-radius: 50%; border: none; cursor: pointer; transition: filter 0.2s; }
+        .mac-btn:hover { filter: brightness(1.3); }
+        .mac-btn.close   { background: #FF5F57; box-shadow: 0 0 6px rgba(255,95,87,0.5); }
+        .mac-btn.minimize { background: #FEBC2E; box-shadow: 0 0 6px rgba(254,188,46,0.5); }
+        .mac-btn.maximize { background: #28C840; box-shadow: 0 0 6px rgba(40,200,64,0.5); }
+        .mac-title {
+            margin-left: 8px; font-family: 'Orbitron', monospace; font-size: 10px; font-weight: 600;
+            letter-spacing: 0.15em; color: var(--text-dim); text-transform: uppercase;
+        }
+        .mac-body { padding: 28px 28px 24px; }
+        .activation-logo { text-align: center; margin-bottom: 22px; }
+        .activation-logo h1 {
+            font-family: 'Orbitron', monospace; font-size: 22px; font-weight: 900;
+            letter-spacing: 0.1em; color: var(--accent);
+            text-shadow: 0 0 20px var(--accent-glow), 0 0 40px var(--accent-glow); line-height: 1;
+        }
+        .activation-logo p {
+            font-size: 11px; color: var(--text-muted); letter-spacing: 0.25em; margin-top: 4px; text-transform: uppercase;
+        }
+        .key-input {
+            width: 100%; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px;
+            padding: 12px 16px; font-family: 'Share Tech Mono', monospace; font-size: 13px; color: var(--text-primary);
+            letter-spacing: 0.12em; outline: none; transition: border-color 0.25s, box-shadow 0.25s; margin-bottom: 12px;
+        }
+        .key-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-ultra), 0 0 12px var(--accent-glow); }
+        .btn-activate {
+            width: 100%; padding: 13px; background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dim) 100%);
+            border: none; border-radius: 8px; font-family: 'Orbitron', monospace; font-size: 11px; font-weight: 700;
+            letter-spacing: 0.2em; color: #fff; cursor: pointer; position: relative; overflow: hidden;
+            transition: all 0.25s; text-transform: uppercase; box-shadow: 0 4px 20px var(--accent-glow);
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .btn-activate::after {
+            content: ''; position: absolute; inset: 0;
+            background: linear-gradient(180deg, rgba(255,255,255,0.12) 0%, transparent 100%); pointer-events: none;
+        }
+        .btn-activate:hover { transform: translateY(-2px); box-shadow: 0 8px 30px var(--accent-glow); }
+        .btn-activate:active { transform: translateY(0); }
+        .err-msg {
+            font-size: 12px; color: #FF5555; text-align: center; margin-top: 10px; min-height: 18px;
+            letter-spacing: 0.05em; display: none; align-items: center; justify-content: center; gap: 6px;
+        }
+        .shake { animation: shake calc(0.4s * var(--anim-speed)) ease; }
+        @keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)} 40%{transform:translateX(8px)} 60%{transform:translateX(-5px)} 80%{transform:translateX(5px)} }
+
+        /* Main app */
+        #app { display: none; height: 100vh; flex-direction: column; }
+        #app.active { display: flex; }
+        .topbar {
+            height: 46px; background: linear-gradient(90deg, var(--bg-sidebar) 0%, var(--bg-panel) 100%);
+            border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 20px; gap: 12px; flex-shrink: 0;
+        }
+        .topbar-logo {
+            font-family: 'Orbitron', monospace; font-size: 13px; font-weight: 900;
+            color: var(--accent); letter-spacing: 0.15em; text-shadow: 0 0 12px var(--accent-glow); white-space: nowrap;
+        }
+        .topbar-sep { width: 1px; height: 20px; background: var(--border); }
+        .topbar-user { font-size: 12px; color: var(--text-dim); letter-spacing: 0.08em; }
+        .topbar-user span { color: var(--accent); font-weight: 600; }
+        .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 16px; }
+        .status-dot {
+            width: 7px; height: 7px; border-radius: 50%; background: #00FF88;
+            box-shadow: 0 0 6px rgba(0,255,136,0.6); animation: pulse-dot 2s ease-in-out infinite;
+        }
+        @keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:0.4} }
+        .topbar-clock { font-family: 'Share Tech Mono', monospace; font-size: 12px; color: var(--text-dim); }
+        .btn-power {
+            width: 28px; height: 28px; border-radius: 6px;
+            background: rgba(255,34,68,0.1); border: 1px solid rgba(255,34,68,0.3);
+            color: var(--accent); cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s; padding: 4px;
+        }
+        .btn-power svg { width: 16px; height: 16px; stroke: currentColor; }
+        .btn-power:hover { background: rgba(255,34,68,0.25); box-shadow: 0 0 10px var(--accent-glow); }
+
+        .main-layout { display: flex; flex: 1; overflow: hidden; }
+        .sidebar {
+            width: var(--sidebar-w); background: var(--bg-sidebar); border-right: 1px solid var(--border);
+            display: flex; flex-direction: column; padding: 20px 12px; flex-shrink: 0; gap: 4px;
+        }
+        .sidebar-section-label {
+            font-size: 10px; letter-spacing: 0.2em; color: var(--text-muted); text-transform: uppercase;
+            padding: 8px 10px 4px; font-weight: 600;
+        }
+        .nav-item {
+            display: flex; align-items: center; gap: 12px; padding: 11px 12px; border-radius: 8px;
+            cursor: pointer; color: var(--text-dim); font-size: 13px; font-weight: 600;
+            letter-spacing: 0.06em; transition: all calc(0.2s * var(--anim-speed));
+            position: relative; overflow: hidden; user-select: none; border: 1px solid transparent;
+        }
+        .nav-item:hover { background: var(--accent-ultra); color: var(--text-primary); }
+        .nav-item.active {
+            background: var(--accent-ultra); border-color: var(--border); color: var(--accent);
+            box-shadow: inset 0 0 12px var(--accent-ultra), 0 0 8px var(--accent-glow);
+        }
+        .nav-item.active::before {
+            content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+            background: var(--accent); box-shadow: 0 0 8px var(--accent); border-radius: 0 2px 2px 0;
+        }
+        .nav-icon { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 2; }
+        .nav-label { flex: 1; }
+        .nav-badge {
+            font-size: 9px; background: var(--accent); color: #000; border-radius: 4px;
+            padding: 1px 5px; font-weight: 700; letter-spacing: 0.05em;
+        }
+        .sidebar-bottom { margin-top: auto; background: var(--accent-ultra); border: 1px solid var(--border); border-radius: 8px; padding: 12px; }
+        .user-card { display: flex; align-items: center; gap: 10px; }
+        .user-avatar {
+            width: 36px; height: 36px; border-radius: 8px;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dim) 100%);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 16px; font-weight: 900; font-family: 'Orbitron', monospace; color: #fff; flex-shrink: 0;
+        }
+        .user-info { overflow: hidden; }
+        .user-name {
+            font-size: 12px; font-weight: 700; color: var(--text-primary); letter-spacing: 0.05em;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .user-plan { font-size: 10px; color: var(--accent); letter-spacing: 0.12em; text-transform: uppercase; font-weight: 600; }
+        .hwid-chip {
+            margin-top: 8px; font-family: 'Share Tech Mono', monospace;
+            font-size: 9px; color: var(--text-muted); letter-spacing: 0.08em;
+        }
+        .content-area {
+            flex: 1; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 20px;
+        }
+        .content-area::-webkit-scrollbar { width: 4px; }
+        .content-area::-webkit-scrollbar-track { background: transparent; }
+        .content-area::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+        .panel { display: none; flex-direction: column; gap: 18px; }
+        .panel.active { display: flex; animation: panelFade calc(0.3s * var(--anim-speed)) ease; }
+        @keyframes panelFade { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+        .card {
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px;
+            padding: 20px; position: relative; overflow: hidden;
+        }
+        .card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+            background: linear-gradient(90deg, transparent, var(--accent-glow), transparent);
+        }
+        .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+        .card-title {
+            font-family: 'Orbitron', monospace; font-size: 11px; font-weight: 700;
+            letter-spacing: 0.2em; color: var(--accent); text-transform: uppercase;
+        }
+        .card-badge {
+            font-size: 10px; letter-spacing: 0.1em; color: var(--text-muted);
+            background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 4px; padding: 2px 8px;
+        }
+        .card-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+        .card-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; }
+        .stat-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 4px; }
+        .stat-chip {
+            background: var(--accent-ultra); border: 1px solid var(--border); border-radius: 10px;
+            padding: 14px 12px; text-align: center;
+        }
+        .stat-val { font-family: 'Orbitron', monospace; font-size: 20px; font-weight: 900; color: var(--accent); text-shadow: 0 0 12px var(--accent-glow); line-height: 1; }
+        .stat-lbl { font-size: 10px; color: var(--text-muted); letter-spacing: 0.12em; margin-top: 4px; }
+
+        .btn {
+            display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+            padding: 10px 18px; border-radius: 8px;
+            border: 1px solid var(--border-bright);
+            background: linear-gradient(135deg, rgba(255,34,68,0.15) 0%, rgba(255,34,68,0.05) 100%);
+            color: var(--accent); font-family: 'Orbitron', monospace;
+            font-size: 10px; font-weight: 700; letter-spacing: 0.15em;
+            text-transform: uppercase; cursor: pointer; position: relative; overflow: hidden;
+            transition: all calc(0.2s * var(--anim-speed)); box-shadow: 0 0 10px rgba(0,0,0,0.3);
+        }
+        .btn:hover { background: linear-gradient(135deg, rgba(255,34,68,0.3) 0%, rgba(255,34,68,0.12) 100%); box-shadow: 0 0 20px var(--accent-glow); transform: translateY(-1px); }
+        .btn:active { transform: translateY(1px); }
+        .btn-full { width: 100%; }
+
+        .toggle-wrap {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+        .toggle-wrap:last-child { border-bottom: none; }
+        .toggle-info { flex: 1; }
+        .toggle-label { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+        .toggle-desc { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+        .toggle { position: relative; width: 42px; height: 24px; flex-shrink: 0; margin-left: 12px; }
+        .toggle input { opacity:0; width:0; height:0; }
+        .toggle-slider {
+            position: absolute; cursor: pointer; inset: 0; background: rgba(255,255,255,0.06);
+            border: 1px solid var(--border); border-radius: 24px; transition: all calc(0.25s * var(--anim-speed));
+        }
+        .toggle-slider::before {
+            content: ''; position: absolute; left: 3px; top: 3px; width: 16px; height: 16px;
+            border-radius: 50%; background: var(--text-muted); transition: all calc(0.25s * var(--anim-speed));
+        }
+        input:checked + .toggle-slider {
+            background: var(--accent-ultra); border-color: var(--accent); box-shadow: 0 0 8px var(--accent-glow);
+        }
+        input:checked + .toggle-slider::before { transform: translateX(18px); background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+
+        .slider-wrap { margin: 12px 0; }
+        .slider-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .slider-name { font-size: 12px; color: var(--text-dim); font-weight: 600; }
+        .slider-val {
+            font-family: 'Share Tech Mono', monospace; font-size: 12px; color: var(--accent);
+            background: var(--accent-ultra); border: 1px solid var(--border); border-radius: 4px;
+            padding: 1px 8px; min-width: 40px; text-align: center;
+        }
+        input[type="range"] {
+            -webkit-appearance: none; width: 100%; height: 4px; border-radius: 4px; outline: none; cursor: pointer;
+            background: linear-gradient(90deg, var(--accent) var(--pct,50%), rgba(255,255,255,0.08) var(--pct,50%));
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%;
+            background: var(--accent); box-shadow: 0 0 8px var(--accent-glow);
+            border: 2px solid rgba(255,255,255,0.2); transition: transform 0.15s;
+        }
+        input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+
+        .progress-bar-outer {
+            height: 8px; border-radius: 8px; background: rgba(255,255,255,0.06);
+            border: 1px solid var(--border); overflow: hidden; margin: 10px 0;
+        }
+        .progress-bar-inner {
+            height: 100%; border-radius: 8px; background: linear-gradient(90deg, var(--accent-dim), var(--accent));
+            box-shadow: 0 0 8px var(--accent-glow); width: 0%; transition: width calc(0.05s * var(--anim-speed)) linear;
+        }
+        .radio-group { display: flex; gap: 8px; flex-wrap: wrap; }
+        .radio-opt { position: relative; }
+        .radio-opt input { display: none; }
+        .radio-opt label {
+            display: flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 6px;
+            border: 1px solid var(--border); background: rgba(255,255,255,0.03);
+            font-size: 12px; font-weight: 600; letter-spacing: 0.08em; color: var(--text-dim); cursor: pointer;
+            transition: all calc(0.2s * var(--anim-speed));
+        }
+        .radio-opt input:checked + label {
+            background: var(--accent-ultra); border-color: var(--accent); color: var(--accent);
+            box-shadow: 0 0 8px var(--accent-glow);
+        }
+        .radio-opt label svg { width: 14px; height: 14px; stroke: currentColor; }
+        select.styled-select {
+            width: 100%; padding: 10px 12px; background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary);
+            font-family: 'Rajdhani', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888899' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px;
+        }
+        select.styled-select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-ultra); }
+
+        .system-ring-container { display: flex; justify-content: center; gap: 30px; padding: 10px 0 4px; }
+        .ring-item { text-align: center; }
+        .ring-svg { transform: rotate(-90deg); }
+        .ring-track { fill: none; stroke: rgba(255,255,255,0.06); stroke-width: 5; }
+        .ring-fill { fill: none; stroke: var(--accent); stroke-width: 5; stroke-linecap: round; filter: drop-shadow(0 0 4px var(--accent)); transition: stroke-dashoffset calc(1s * var(--anim-speed)) ease; }
+        .ring-label { font-family: 'Orbitron', monospace; font-size: 11px; font-weight: 700; color: var(--accent); }
+        .ring-sublabel { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+
+        .console-wrap {
+            background: #060610; border: 1px solid var(--border); border-radius: 8px;
+            padding: 12px; height: 130px; overflow: hidden; position: relative;
+        }
+        .console-title {
+            font-family: 'Share Tech Mono', monospace; font-size: 10px; color: var(--text-muted);
+            letter-spacing: 0.15em; margin-bottom: 8px; text-transform: uppercase;
+        }
+        .console-log { height: calc(100% - 24px); overflow-y: auto; display: flex; flex-direction: column; gap: 3px; }
+        .console-log::-webkit-scrollbar { width: 2px; }
+        .console-log::-webkit-scrollbar-thumb { background: var(--border); }
+        .console-entry { font-family: 'Share Tech Mono', monospace; font-size: 11px; line-height: 1.6; animation: logEntry calc(0.2s * var(--anim-speed)) ease; }
+        @keyframes logEntry { from{opacity:0;transform:translateX(-4px)} to{opacity:1;transform:translateX(0)} }
+        .log-time { color: var(--text-muted); }
+        .log-sys { color: #88AAFF; }
+        .log-ok { color: #00FF88; }
+        .log-warn { color: #FFAA00; }
+        .log-err { color: #FF4455; }
+        .log-dim { color: var(--text-muted); }
+
+        .hit-zone-wrap { display: flex; align-items: center; justify-content: center; padding: 20px 0; }
+        .hit-zone-canvas {
+            width: 140px; height: 140px; border-radius: 50%;
+            background: rgba(255,255,255,0.02); border: 1px solid var(--border);
+            position: relative; display: flex; align-items: center; justify-content: center;
+        }
+        .hz-ring { position: absolute; border-radius: 50%; border: 1px solid; transition: all calc(0.4s * var(--anim-speed)) ease; }
+        .hz-r1 { width: 130px; height: 130px; border-color: rgba(255,34,68,0.12); }
+        .hz-r2 { width: 90px; height: 90px; border-color: rgba(255,34,68,0.2); }
+        .hz-r3 { width: 55px; height: 55px; border-color: rgba(255,34,68,0.4); }
+        .hz-center { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 10px var(--accent), 0 0 20px var(--accent-glow); transition: transform calc(0.2s * var(--anim-speed)) ease; }
+        .hz-vline, .hz-hline { position: absolute; background: rgba(255,34,68,0.25); }
+        .hz-vline { width: 1px; height: 130px; }
+        .hz-hline { height: 1px; width: 130px; }
+
+        .theme-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; }
+        .theme-btn {
+            height: 50px; border-radius: 8px; border: 2px solid transparent;
+            cursor: pointer; position: relative; overflow: hidden; transition: all 0.2s;
+        }
+        .theme-btn:hover { transform: scale(1.05); }
+        .theme-btn.selected { border-color: #fff; box-shadow: 0 0 12px rgba(255,255,255,0.3); }
+        .theme-btn span { position: absolute; bottom: 4px; left: 0; right: 0; text-align: center; font-size: 9px; letter-spacing: 0.1em; font-family: 'Orbitron', monospace; font-weight: 700; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.8); }
+
+        .statusbar {
+            height: 28px; flex-shrink: 0; background: rgba(0,0,0,0.6); border-top: 1px solid var(--border);
+            display: flex; align-items: center; padding: 0 16px; gap: 20px;
+            font-family: 'Share Tech Mono', monospace; font-size: 10px; color: var(--text-muted); letter-spacing: 0.08em;
+        }
+        .sb-item { display: flex; align-items: center; gap: 6px; }
+        .sb-dot { width: 5px; height: 5px; border-radius: 50%; }
+        .sb-dot.green { background: #00FF88; box-shadow: 0 0 4px rgba(0,255,136,0.6); }
+        .sb-dot.yellow { background: #FFAA00; box-shadow: 0 0 4px rgba(255,170,0,0.6); }
+        .sb-dot.red { background: #FF2244; box-shadow: 0 0 4px rgba(255,34,68,0.6); }
+        .sb-right { margin-left: auto; color: var(--accent); }
+
+        #toast-container {
+            position: fixed; top: 60px; right: 16px;
+            display: flex; flex-direction: column; gap: 8px; z-index: 9000; pointer-events: none;
+        }
+        .toast {
+            background: var(--bg-card); border: 1px solid var(--border-bright); border-radius: 8px;
+            padding: 10px 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.5), 0 0 12px var(--accent-glow);
+            font-size: 12px; color: var(--text-primary); letter-spacing: 0.05em; font-weight: 600;
+            animation: toastIn calc(0.3s * var(--anim-speed)) ease, toastOut calc(0.3s * var(--anim-speed)) ease calc(2.7s * var(--anim-speed)) forwards;
+            display: flex; align-items: center; gap: 8px; min-width: 200px;
+        }
+        @keyframes toastIn { from{opacity:0;transform:translateX(30px)} to{opacity:1;transform:translateX(0)} }
+        @keyframes toastOut { to{opacity:0;transform:translateX(30px)} }
+
+        .ripple {
+            position: absolute; border-radius: 50%; background: rgba(255,255,255,0.18);
+            transform: scale(0); animation: ripple-anim calc(0.5s * var(--anim-speed)) linear; pointer-events: none;
+        }
+        @keyframes ripple-anim { to { transform: scale(4); opacity: 0; } }
+    </style>
+</head>
+<body>
+
+<!-- Activation Overlay -->
+<div id="overlay">
+    <div class="mac-window" id="activation-win">
+        <div class="mac-titlebar" id="drag-handle">
+            <div class="mac-btn close" onclick="closePanel()"></div>
+            <div class="mac-btn minimize"></div>
+            <div class="mac-btn maximize"></div>
+            <span class="mac-title">Jackpot Panel v3.2  |  Activation</span>
+        </div>
+        <div class="mac-body">
+            <div class="activation-logo">
+                <h1>JACKPOT PANEL</h1>
+                <p>System Enhancer &amp; Precision Suite</p>
+            </div>
+            <input class="key-input" id="key-input" type="text" placeholder="XXXX-XXXX-XXXX" maxlength="24" autocomplete="off" spellcheck="false" onkeydown="if(event.key==='Enter')activate()">
+            <button class="btn-activate" onclick="activate()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13,2 3,14 12,14 11,22 21,10 12,10"/></svg>
+                Activate License
+            </button>
+            <div class="err-msg" id="err-msg">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                Invalid License Key
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main App -->
+<div id="app">
+    <div class="topbar">
+        <span class="topbar-logo">JACKPOT PANEL</span>
+        <div class="topbar-sep"></div>
+        <span class="topbar-user">v3.2 &nbsp;|&nbsp; User: <span id="tb-user">JACKPOT_PRO</span></span>
+        <div class="topbar-right">
+            <div class="sb-item"><div class="status-dot"></div><span style="font-size:11px;color:var(--text-dim)">ONLINE</span></div>
+            <span class="topbar-clock" id="topbar-clock">00:00:00</span>
+            <button class="btn-power" onclick="closePanel()" title="Close Panel">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="1" x2="12" y2="11"/></svg>
+            </button>
+        </div>
+    </div>
+
+    <div class="main-layout">
+        <nav class="sidebar">
+            <div class="sidebar-section-label">Navigation</div>
+            <div class="nav-item active" data-panel="home" onclick="switchPanel('home',this)">
+                <svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
+                <span class="nav-label">Dashboard</span>
+                <span class="nav-badge">LIVE</span>
+            </div>
+            <div class="nav-item" data-panel="optimizer" onclick="switchPanel('optimizer',this)">
+                <svg class="nav-icon" viewBox="0 0 24 24"><polygon points="13,2 3,14 12,14 11,22 21,10 12,10"/></svg>
+                <span class="nav-label">Optimizer</span>
+            </div>
+            <div class="nav-item" data-panel="precision" onclick="switchPanel('precision',this)">
+                <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v4m0 14v4M4.22 4.22l2.83 2.83m9.9 9.9l2.83 2.83M1 12h4m14 0h4M4.22 19.78l2.83-2.83m9.9-9.9l2.83-2.83"/></svg>
+                <span class="nav-label">Precision</span>
+            </div>
+            <div class="nav-item" data-panel="settings" onclick="switchPanel('settings',this)">
+                <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+                <span class="nav-label">Settings</span>
+            </div>
+
+            <div class="sidebar-bottom" style="margin-top:auto">
+                <div class="user-card">
+                    <div class="user-avatar">J</div>
+                    <div class="user-info">
+                        <div class="user-name" id="sb-username">JACKPOT_PRO</div>
+                        <div class="user-plan">Elite License</div>
+                    </div>
+                </div>
+                <div class="hwid-chip">HW: <span id="hwid-display">—</span></div>
+                <div class="hwid-chip" style="margin-top:2px">EXP: 2026-12-31</div>
+            </div>
+        </nav>
+
+        <div class="content-area">
+            <!-- Home Panel -->
+            <div class="panel active" id="panel-home">
+                <div class="stat-grid">
+                    <div class="stat-chip"><div class="stat-val" id="stat-cpu">—</div><div class="stat-lbl">CPU LOAD</div></div>
+                    <div class="stat-chip"><div class="stat-val" id="stat-ram">—</div><div class="stat-lbl">RAM FREE</div></div>
+                    <div class="stat-chip"><div class="stat-val" id="stat-fps">60</div><div class="stat-lbl">FPS AVG</div></div>
+                    <div class="stat-chip"><div class="stat-val" id="stat-ping">—</div><div class="stat-lbl">PING (ms)</div></div>
+                </div>
+                <div class="card">
+                    <div class="card-header"><span class="card-title">System Monitor</span><span class="card-badge">LIVE</span></div>
+                    <div class="system-ring-container">
+                        <div class="ring-item">
+                            <svg class="ring-svg" width="80" height="80" viewBox="0 0 80 80"><circle class="ring-track" cx="40" cy="40" r="32"/><circle class="ring-fill" id="ring-cpu" cx="40" cy="40" r="32" stroke-dasharray="201" stroke-dashoffset="201"/></svg>
+                            <div class="ring-label" id="ring-cpu-lbl">0%</div><div class="ring-sublabel">CPU</div>
+                        </div>
+                        <div class="ring-item">
+                            <svg class="ring-svg" width="80" height="80" viewBox="0 0 80 80"><circle class="ring-track" cx="40" cy="40" r="32"/><circle class="ring-fill" id="ring-ram" cx="40" cy="40" r="32" stroke-dasharray="201" stroke-dashoffset="201"/></svg>
+                            <div class="ring-label" id="ring-ram-lbl">0%</div><div class="ring-sublabel">RAM</div>
+                        </div>
+                        <div class="ring-item">
+                            <svg class="ring-svg" width="80" height="80" viewBox="0 0 80 80"><circle class="ring-track" cx="40" cy="40" r="32"/><circle class="ring-fill" id="ring-net" cx="40" cy="40" r="32" stroke-dasharray="201" stroke-dashoffset="201"/></svg>
+                            <div class="ring-label" id="ring-net-lbl">0%</div><div class="ring-sublabel">NETWORK</div>
+                        </div>
+                        <div class="ring-item">
+                            <svg class="ring-svg" width="80" height="80" viewBox="0 0 80 80"><circle class="ring-track" cx="40" cy="40" r="32"/><circle class="ring-fill" id="ring-disk" cx="40" cy="40" r="32" stroke-dasharray="201" stroke-dashoffset="201"/></svg>
+                            <div class="ring-label" id="ring-disk-lbl">0%</div><div class="ring-sublabel">DISK</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card" style="padding:16px">
+                    <div class="console-wrap" style="height:160px;border:none;padding:0">
+                        <div class="console-title">System Console</div>
+                        <div class="console-log" id="console-log"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Optimizer Panel -->
+            <div class="panel" id="panel-optimizer">
+                <div class="card-grid-2">
+                    <div class="card">
+                        <div class="card-header"><span class="card-title">Memory Cleaner</span></div>
+                        <div style="text-align:center;padding:8px 0">
+                            <div style="font-family:'Orbitron',monospace;font-size:28px;font-weight:900;color:var(--accent);text-shadow:0 0 16px var(--accent-glow)" id="ram-pct">2.1 GB</div>
+                            <div style="font-size:11px;color:var(--text-muted);margin-top:2px">Available RAM</div>
+                        </div>
+                        <div class="progress-bar-outer"><div class="progress-bar-inner" id="ram-bar"></div></div>
+                        <div style="font-size:11px;color:var(--text-muted);text-align:center;min-height:16px;margin-bottom:10px" id="ram-status"></div>
+                        <button class="btn btn-full" id="btn-ram" onclick="boostRAM()">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13,2 3,14 12,14 11,22 21,10 12,10"/></svg>
+                            Boost RAM
+                        </button>
+                    </div>
+                    <div class="card">
+                        <div class="card-header"><span class="card-title">Storage Cache</span></div>
+                        <div style="text-align:center;padding:8px 0">
+                            <div style="font-family:'Orbitron',monospace;font-size:28px;font-weight:900;color:var(--accent);text-shadow:0 0 16px var(--accent-glow)" id="cache-size">847 MB</div>
+                            <div style="font-size:11px;color:var(--text-muted);margin-top:2px">System Cache Used</div>
+                        </div>
+                        <div style="height:8px;margin:10px 0 28px"></div>
+                        <button class="btn btn-full" onclick="clearCache()">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3,6 5,6 21,6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                            Clear System Cache
+                        </button>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header"><span class="card-title">CPU Throttle Mode</span><span class="card-badge">ACTIVE</span></div>
+                    <div class="radio-group">
+                        <div class="radio-opt">
+                            <input type="radio" name="cpu-mode" id="cpu-eco" value="eco">
+                            <label for="cpu-eco"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2z"/><path d="M12 6v6l4 2"/></svg> Eco</label>
+                        </div>
+                        <div class="radio-opt">
+                            <input type="radio" name="cpu-mode" id="cpu-balanced" value="balanced" checked>
+                            <label for="cpu-balanced"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg> Balanced</label>
+                        </div>
+                        <div class="radio-opt">
+                            <input type="radio" name="cpu-mode" id="cpu-perf" value="performance">
+                            <label for="cpu-perf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L4.093 12.688c-.348.418-.097 1.062.438 1.062H12l-1 8 8.907-10.688c.348-.418.097-1.062-.438-1.062H12l1-8z"/></svg> Performance</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-grid-2">
+                    <div class="card">
+                        <div class="card-header"><span class="card-title">FPS Stabilizer</span></div>
+                        <div class="toggle-wrap" style="padding:0;border:none">
+                            <div class="toggle-info"><div class="toggle-label">FPS Lock</div><div class="toggle-desc" id="fps-status-desc">Disabled</div></div>
+                            <label class="toggle"><input type="checkbox" id="fps-toggle" onchange="toggleFPS()"><span class="toggle-slider"></span></label>
+                        </div>
+                        <div style="margin-top:12px">
+                            <div class="slider-wrap">
+                                <div class="slider-top"><span class="slider-name">Target FPS</span><span class="slider-val" id="fps-val">60</span></div>
+                                <input type="range" min="30" max="240" value="60" step="30" id="fps-slider" oninput="updateSlider(this,'fps-val','','')" style="--pct:19%">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header"><span class="card-title">DNS Optimizer</span></div>
+                        <div style="margin-bottom:12px">
+                            <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;letter-spacing:0.08em">SELECT DNS SERVER</div>
+                            <select class="styled-select" id="dns-select" onchange="changeDNS()">
+                                <option value="default">System Default</option>
+                                <option value="google">Google DNS (8.8.8.8)</option>
+                                <option value="cloudflare">Cloudflare (1.1.1.1)</option>
+                                <option value="quad9">Quad9 (9.9.9.9)</option>
+                            </select>
+                        </div>
+                        <div style="font-size:12px;color:var(--text-muted)" id="dns-info">Using system default resolver</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Precision Panel -->
+            <div class="panel" id="panel-precision">
+                <div class="card-grid-2">
+                    <div class="card">
+                        <div class="card-header"><span class="card-title">Aim Stabilizer</span></div>
+                        <div class="toggle-wrap">
+                            <div class="toggle-info"><div class="toggle-label">Stabilizer Active</div><div class="toggle-desc">Reduces micro-jitter</div></div>
+                            <label class="toggle"><input type="checkbox" id="aim-toggle" onchange="updateHitZone()"><span class="toggle-slider"></span></label>
+                        </div>
+                        <div class="slider-wrap">
+                            <div class="slider-top"><span class="slider-name">Smoothness</span><span class="slider-val" id="smooth-val">5</span></div>
+                            <input type="range" min="1" max="10" value="5" id="smooth-slider" oninput="updateSlider(this,'smooth-val','','');updateHitZone()" style="--pct:44%">
+                        </div>
+                        <div style="margin-top:6px">
+                            <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">RESPONSE CURVE</div>
+                            <div class="radio-group">
+                                <div class="radio-opt"><input type="radio" name="curve" id="c-linear" value="linear" checked><label for="c-linear">Linear</label></div>
+                                <div class="radio-opt"><input type="radio" name="curve" id="c-dynamic" value="dynamic"><label for="c-dynamic">Dynamic</label></div>
+                                <div class="radio-opt"><input type="radio" name="curve" id="c-precision" value="precision"><label for="c-precision">Precision</label></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header"><span class="card-title">Zone Preview</span><span class="card-badge">SIMULATION</span></div>
+                        <div class="hit-zone-wrap">
+                            <div class="hit-zone-canvas" id="hit-zone">
+                                <div class="hz-vline"></div><div class="hz-hline"></div>
+                                <div class="hz-ring hz-r1"></div><div class="hz-ring hz-r2"></div><div class="hz-ring hz-r3"></div>
+                                <div class="hz-center" id="hz-center"></div>
+                            </div>
+                        </div>
+                        <div style="text-align:center;font-size:11px;color:var(--text-muted)">Precision zone visualization</div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header"><span class="card-title">Click Optimizer</span></div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+                        <div>
+                            <div class="slider-wrap">
+                                <div class="slider-top"><span class="slider-name">De-bounce Delay</span><span class="slider-val" id="db-val">10ms</span></div>
+                                <input type="range" min="0" max="50" value="10" id="db-slider" oninput="updateSlider(this,'db-val','','ms')" style="--pct:20%">
+                            </div>
+                        </div>
+                        <div>
+                            <div class="toggle-wrap" style="padding-top:8px;border:none">
+                                <div class="toggle-info"><div class="toggle-label">Mouse Acceleration</div><div class="toggle-desc">OS-level accel curve</div></div>
+                                <label class="toggle"><input type="checkbox" id="accel-toggle" onchange="toast('Mouse Acceleration ' + (this.checked ? 'Enabled' : 'Disabled'))"><span class="toggle-slider"></span></label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Panel -->
+            <div class="panel" id="panel-settings">
+                <div class="card">
+                    <div class="card-header"><span class="card-title">Color Theme</span></div>
+                    <div class="theme-grid">
+                        <button class="theme-btn selected" style="background:linear-gradient(135deg,#FF2244,#8B0020)" onclick="setTheme('red',this)"><span>RED</span></button>
+                        <button class="theme-btn" style="background:linear-gradient(135deg,#00FFCC,#006644)" onclick="setTheme('cyan',this)"><span>CYAN</span></button>
+                        <button class="theme-btn" style="background:linear-gradient(135deg,#AA44FF,#550099)" onclick="setTheme('purple',this)"><span>PURPLE</span></button>
+                        <button class="theme-btn" style="background:linear-gradient(135deg,#00FF88,#004422)" onclick="setTheme('green',this)"><span>GREEN</span></button>
+                    </div>
+                </div>
+                <div class="card-grid-2">
+                    <div class="card">
+                        <div class="card-header"><span class="card-title">Window Opacity</span></div>
+                        <div class="slider-wrap">
+                            <div class="slider-top"><span class="slider-name">Opacity</span><span class="slider-val" id="opacity-val">1.0</span></div>
+                            <input type="range" min="60" max="100" value="100" id="opacity-slider" oninput="setOpacity(this)" style="--pct:100%">
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header"><span class="card-title">Font Size</span></div>
+                        <div class="radio-group">
+                            <div class="radio-opt"><input type="radio" name="fontsize" id="fs-small" value="0.88"><label for="fs-small">Small</label></div>
+                            <div class="radio-opt"><input type="radio" name="fontsize" id="fs-normal" value="1" checked><label for="fs-normal">Normal</label></div>
+                            <div class="radio-opt"><input type="radio" name="fontsize" id="fs-large" value="1.12"><label for="fs-large">Large</label></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-grid-2">
+                    <div class="card">
+                        <div class="card-header"><span class="card-title">Layout Mode</span></div>
+                        <div class="radio-group">
+                            <div class="radio-opt"><input type="radio" name="layout" id="l-single" value="single" checked><label for="l-single">Single Panel</label></div>
+                            <div class="radio-opt"><input type="radio" name="layout" id="l-dual" value="dual"><label for="l-dual">Dual Panel</label></div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header"><span class="card-title">Animation Speed</span></div>
+                        <div class="radio-group">
+                            <div class="radio-opt"><input type="radio" name="anim-speed" id="as-fast" value="0.5"><label for="as-fast">Fast</label></div>
+                            <div class="radio-opt"><input type="radio" name="anim-speed" id="as-normal" value="1" checked><label for="as-normal">Normal</label></div>
+                            <div class="radio-opt"><input type="radio" name="anim-speed" id="as-slow" value="2"><label for="as-slow">Slow</label></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="statusbar">
+        <div class="sb-item"><div class="sb-dot green"></div>Engine Online</div>
+        <div class="sb-item"><div class="sb-dot green"></div>License Verified</div>
+        <div class="sb-item"><div class="sb-dot yellow"></div><span id="sb-cpu">CPU: — %</span></div>
+        <div class="sb-item"><div class="sb-dot green"></div><span id="sb-net">Network: Stable</span></div>
+        <span class="sb-right" id="sb-clock">00:00:00</span>
+    </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script>
+    const VALID_KEY = 'JACKPOT-PRO-2026';
+    const HWID = generateHWID();
+    let simRunning = false;
+
+    function activate() {
+        const val = document.getElementById('key-input').value.trim().toUpperCase();
+        const errEl = document.getElementById('err-msg');
+        const winEl = document.getElementById('activation-win');
+        if (val === VALID_KEY) {
+            errEl.style.display = 'none';
+            document.getElementById('overlay').style.transition = 'opacity 0.5s';
+            document.getElementById('overlay').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('overlay').style.display = 'none';
+                document.getElementById('app').classList.add('active');
+                initApp();
+            }, 500);
+        } else {
+            errEl.style.display = 'flex';
+            winEl.classList.remove('shake');
+            void winEl.offsetWidth;
+            winEl.classList.add('shake');
+            addLog('Invalid license attempt — ' + (val || '(empty)'), 'err');
+        }
+    }
+
+    function closePanel() {
+        document.getElementById('app').classList.remove('active');
+        const overlay = document.getElementById('overlay');
+        overlay.style.display = 'flex';
+        overlay.style.opacity = '0';
+        setTimeout(() => { overlay.style.transition = 'opacity 0.4s'; overlay.style.opacity = '1'; }, 10);
+        document.getElementById('key-input').value = '';
+        document.getElementById('err-msg').style.display = 'none';
+    }
+
+    function generateHWID() {
+        const chars = 'ABCDEF0123456789';
+        return Array.from({length:4},()=>Array.from({length:4},()=>chars[Math.floor(Math.random()*chars.length)]).join('')).join('-');
+    }
+
+    function initApp() {
+        document.getElementById('hwid-display').textContent = HWID;
+        simRunning = true;
+        startClock();
+        startSimMonitor();
+        startConsoleStream();
+        setupSettingsListeners();
+        addLog('Jackpot Panel v3.2 initialized', 'ok');
+        addLog('License verified — ELITE tier', 'ok');
+        addLog('Hardware ID bound: ' + HWID, 'sys');
+        addLog('Precision Engine starting...', 'dim');
+        setTimeout(() => addLog('All subsystems nominal', 'ok'), 1200);
+    }
+
+    function startClock() {
+        function tick() {
+            const now = new Date();
+            const t = now.toTimeString().slice(0,8);
+            document.getElementById('topbar-clock').textContent = t;
+            document.getElementById('sb-clock').textContent = t;
+        }
+        tick(); setInterval(tick, 1000);
+    }
+
+    const simState = { cpu:28, ram:61, net:14, disk:45, ping:22 };
+    function startSimMonitor() {
+        function jitter(v, min, max, delta=5) { v += (Math.random()-0.5)*delta*2; return Math.max(min, Math.min(max, v)); }
+        setInterval(() => {
+            simState.cpu  = jitter(simState.cpu, 8, 85, 4);
+            simState.ram  = jitter(simState.ram, 40, 78, 2);
+            simState.net  = jitter(simState.net, 5, 90, 8);
+            simState.disk = jitter(simState.disk, 30, 60, 1);
+            simState.ping = jitter(simState.ping, 10, 80, 3);
+            const freeGB = ((100 - simState.ram) * 0.16).toFixed(1);
+            document.getElementById('stat-cpu').textContent  = Math.round(simState.cpu)  + '%';
+            document.getElementById('stat-ram').textContent  = freeGB + 'G';
+            document.getElementById('stat-fps').textContent  = Math.random()>0.1 ? '60' : '59';
+            document.getElementById('stat-ping').textContent = Math.round(simState.ping);
+            document.getElementById('sb-cpu').textContent    = 'CPU: ' + Math.round(simState.cpu) + '%';
+            setRing('ring-cpu', simState.cpu); setRing('ring-ram', simState.ram);
+            setRing('ring-net', simState.net); setRing('ring-disk', simState.disk);
+            document.getElementById('ring-cpu-lbl').textContent  = Math.round(simState.cpu)  + '%';
+            document.getElementById('ring-ram-lbl').textContent  = Math.round(simState.ram)  + '%';
+            document.getElementById('ring-net-lbl').textContent  = Math.round(simState.net)  + '%';
+            document.getElementById('ring-disk-lbl').textContent = Math.round(simState.disk) + '%';
+        }, 1200);
+    }
+
+    function setRing(id, pct) {
+        const circ = 201;
+        const el = document.getElementById(id);
+        if (el) el.style.strokeDashoffset = circ - (circ * pct / 100);
+    }
+
+    const consoleMsgs = [
+        ['Monitoring CPU thermal profile...', 'dim'], ['RAM sweep cycle completed', 'ok'],
+        ['Network latency check — stable', 'ok'], ['Precision engine heartbeat OK', 'ok'],
+        ['I/O scheduler optimized', 'sys'], ['Cache flush routine executed', 'sys'],
+        ['DNS response time: 4ms', 'ok'], ['Thermal headroom: 18°C', 'ok'],
+        ['Precision buffer refreshed', 'dim'], ['System entropy stable', 'dim'],
+        ['License heartbeat sent', 'ok'], ['Click de-bounce calibrated', 'sys'],
+    ];
+    let msgIdx = 0;
+    function startConsoleStream() {
+        function emit() {
+            const [msg, cls] = consoleMsgs[msgIdx % consoleMsgs.length];
+            addLog(msg, cls);
+            msgIdx++;
+            setTimeout(emit, 2500 + Math.random()*3000);
+        }
+        setTimeout(emit, 2000);
+    }
+
+    function addLog(msg, cls='sys') {
+        const log = document.getElementById('console-log');
+        if (!log) return;
+        const now = new Date().toTimeString().slice(0,8);
+        const entry = document.createElement('div');
+        entry.className = 'console-entry';
+        const tag = { sys:'log-sys', ok:'log-ok', warn:'log-warn', err:'log-err', dim:'log-dim' }[cls] || 'log-dim';
+        entry.innerHTML = `<span class="log-time">[${now}]</span> <span class="${tag}">${msg}</span>`;
+        log.appendChild(entry);
+        log.scrollTop = log.scrollHeight;
+        while (log.children.length > 40) log.removeChild(log.firstChild);
+    }
+
+    function switchPanel(name, el) {
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+        el.classList.add('active');
+        document.getElementById('panel-'+name).classList.add('active');
+    }
+
+    let ramBoosting = false;
+    function boostRAM() {
+        if (ramBoosting) return;
+        ramBoosting = true;
+        const btn = document.getElementById('btn-ram'), bar = document.getElementById('ram-bar'),
+              status = document.getElementById('ram-status'), pct = document.getElementById('ram-pct');
+        btn.disabled = true; btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg> Boosting...`;
+        status.textContent = 'Scanning memory pages...'; bar.style.width = '0%';
+        let v = 0;
+        const iv = setInterval(() => {
+            v += Math.random()*3 + 1;
+            if (v >= 100) { v = 100; clearInterval(iv); finish(); }
+            bar.style.width = v + '%';
+            if (v < 30) status.textContent = 'Scanning memory pages... ' + Math.round(v) + '%';
+            else if (v < 60) status.textContent = 'Releasing cached blocks... ' + Math.round(v) + '%';
+            else if (v < 90) status.textContent = 'Compacting heap... ' + Math.round(v) + '%';
+            else status.textContent = 'Finalizing... ' + Math.round(v) + '%';
+        }, 60);
+        function finish() {
+            status.textContent = 'Cleaned +256 MB freed';
+            pct.textContent = (parseFloat(pct.textContent)+0.3).toFixed(1) + ' GB';
+            btn.disabled = false;
+            btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13,2 3,14 12,14 11,22 21,10 12,10"/></svg> Boost RAM`;
+            toast('RAM Boost Complete — +256MB freed');
+            addLog('RAM Boost completed — 256MB released', 'ok');
+            ramBoosting = false;
+        }
+    }
+
+    function clearCache() {
+        document.getElementById('cache-size').textContent = '0 MB';
+        toast('System Cache Cleared');
+        addLog('System cache flushed successfully', 'ok');
+        setTimeout(() => {
+            document.getElementById('cache-size').textContent = Math.floor(Math.random()*200+50) + ' MB';
+        }, 8000);
+    }
+
+    document.querySelectorAll('input[name="cpu-mode"]').forEach(r => {
+        r.addEventListener('change', () => {
+            toast('CPU Mode: ' + r.value.charAt(0).toUpperCase()+r.value.slice(1));
+            addLog('CPU throttle set to: ' + r.value, 'sys');
+        });
+    });
+
+    function toggleFPS() {
+        const on = document.getElementById('fps-toggle').checked;
+        document.getElementById('fps-status-desc').textContent = on ? 'Maintaining Stable ' + document.getElementById('fps-val').textContent + ' FPS' : 'Disabled';
+        toast('FPS Stabilizer ' + (on ? 'ON' : 'OFF'));
+        addLog('FPS stabilizer ' + (on ? 'enabled at ' + document.getElementById('fps-val').textContent + ' FPS' : 'disabled'), 'ok');
+    }
+
+    function changeDNS() {
+        const v = document.getElementById('dns-select').value;
+        const info = { default:'Using system default resolver', google:'Routing via Google Public DNS (8.8.8.8 / 8.8.4.4)', cloudflare:'Routing via Cloudflare DNS (1.1.1.1 / 1.0.0.1)', quad9:'Routing via Quad9 Secure DNS (9.9.9.9)' };
+        document.getElementById('dns-info').textContent = info[v];
+        toast('DNS changed');
+        addLog('DNS resolver switched: ' + v, 'sys');
+    }
+
+    function updateHitZone() {
+        const active = document.getElementById('aim-toggle').checked;
+        const smooth = parseInt(document.getElementById('smooth-slider').value);
+        const center = document.getElementById('hz-center');
+        center.style.transform = `scale(${active ? 1 : 0.5})`;
+        center.style.opacity = active ? '1' : '0.3';
+        document.querySelectorAll('.hz-ring').forEach(r => r.style.opacity = active ? '1' : '0.3');
+        addLog(active ? 'Aim stabilizer active — smoothness '+smooth : 'Aim stabilizer disabled', active?'ok':'dim');
+    }
+
+    function updateSlider(el, valId, pre, post) {
+        const v = el.value;
+        document.getElementById(valId).textContent = pre + v + post;
+        const min = parseFloat(el.min), max = parseFloat(el.max);
+        el.style.setProperty('--pct', ((v-min)/(max-min)*100).toFixed(1)+'%');
+    }
+
+    function setupSettingsListeners() {
+        document.querySelectorAll('input[name="fontsize"]').forEach(r => {
+            r.addEventListener('change', () => { document.documentElement.style.setProperty('--font-scale', r.value); });
+        });
+        document.querySelectorAll('input[name="anim-speed"]').forEach(r => {
+            r.addEventListener('change', () => { document.documentElement.style.setProperty('--anim-speed', r.value); });
+        });
+        document.querySelectorAll('input[name="layout"]').forEach(r => {
+            r.addEventListener('change', () => { document.body.classList.toggle('dual-panel', r.value === 'dual'); });
+        });
+    }
+
+    function setTheme(theme, btn) {
+        document.body.setAttribute('data-theme', theme === 'red' ? '' : theme);
+        document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        toast('Theme changed: ' + theme.toUpperCase());
+        addLog('Color theme set to: ' + theme, 'sys');
+    }
+
+    function setOpacity(el) {
+        const v = (el.value / 100).toFixed(1);
+        document.getElementById('opacity-val').textContent = v;
+        document.documentElement.style.setProperty('--opacity', v);
+        el.style.setProperty('--pct', ((el.value-60)/(100-60)*100).toFixed(1)+'%');
+    }
+
+    function toast(msg) {
+        const container = document.getElementById('toast-container');
+        const el = document.createElement('div');
+        el.className = 'toast';
+        el.textContent = msg;
+        container.appendChild(el);
+        setTimeout(() => el.remove(), 3200);
+    }
+
+    document.addEventListener('click', e => {
+        const btn = e.target.closest('.btn, .btn-activate');
+        if (!btn) return;
+        const r = document.createElement('span');
+        r.className = 'ripple';
+        const rect = btn.getBoundingClientRect();
+        const size = Math.max(rect.width, rect.height);
+        r.style.cssText = `width:${size}px;height:${size}px;left:${e.clientX-rect.left-size/2}px;top:${e.clientY-rect.top-size/2}px`;
+        btn.appendChild(r);
+        r.addEventListener('animationend', () => r.remove());
+    });
+
+    (function() {
+        const win = document.getElementById('activation-win');
+        const handle = document.getElementById('drag-handle');
+        let mx=0, my=0, dragging=false;
+        handle.addEventListener('mousedown', e => {
+            dragging = true;
+            mx = e.clientX - win.offsetLeft;
+            my = e.clientY - win.offsetTop;
+            win.style.position = 'absolute';
+            e.preventDefault();
+        });
+        document.addEventListener('mousemove', e => {
+            if (!dragging) return;
+            const overlay = document.getElementById('overlay');
+            const bx = overlay.getBoundingClientRect();
+            let nx = e.clientX - mx, ny = e.clientY - my;
+            nx = Math.max(0, Math.min(bx.width  - win.offsetWidth,  nx));
+            ny = Math.max(0, Math.min(bx.height - win.offsetHeight, ny));
+            win.style.left = nx + 'px';
+            win.style.top  = ny + 'px';
+        });
+        document.addEventListener('mouseup', () => { dragging = false; });
+    })();
+
+    window.addEventListener('DOMContentLoaded', () => {
+        setRing('ring-cpu', 0); setRing('ring-ram', 0); setRing('ring-net', 0); setRing('ring-disk', 0);
+    });
+</script>
+</body>
+</html>
